@@ -1,0 +1,263 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:VilmLyricsAligner.Desktop"
+        x:Class="VilmLyricsAligner.Desktop.MainWindow"
+        Title="Vilm Lyrics Aligner"
+        Icon="/Assets/vilm.ico"
+        Width="620" Height="650"
+        MinWidth="560" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="#F2E9D2"
+        FontFamily="Segoe UI"
+        FontSize="11">
+  <Window.Resources>
+    <SolidColorBrush x:Key="VilmBackground">#F2E9D2</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmCard">#FAF8F2</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmSmartCard">#F4F3E7</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmTitlebar">#E8E0CF</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmButton">#EDE8DA</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmText">#1A1A1A</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmDim">#7A6B55</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmBorder">#C4B69C</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmGreen">#043D20</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmLeaf">#3E5A2E</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmAmber">#F6C522</SolidColorBrush>
+    <SolidColorBrush x:Key="VilmRed">#BB2222</SolidColorBrush>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="Button, TextBox, ComboBox, ComboBoxItem, NumericUpDown, RadioButton">
+      <Setter Property="FontFamily" Value="Segoe UI" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="Segoe UI" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{StaticResource VilmText}" />
+    </Style>
+    <Style Selector="TextBlock.dim">
+      <Setter Property="FontFamily" Value="Segoe UI" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource VilmDim}" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.mono">
+      <Setter Property="FontFamily" Value="Consolas" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="FontFamily" Value="Consolas" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{StaticResource VilmCard}" />
+      <Setter Property="BorderBrush" Value="{StaticResource VilmBorder}" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+    <Style Selector="Border.smart">
+      <Setter Property="Background" Value="{StaticResource VilmSmartCard}" />
+      <Setter Property="BorderBrush" Value="{StaticResource VilmLeaf}" />
+    </Style>
+    <Style Selector="Border.card.last">
+      <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{StaticResource VilmButton}" />
+      <Setter Property="Foreground" Value="{StaticResource VilmText}" />
+      <Setter Property="BorderBrush" Value="{StaticResource VilmBorder}" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="CornerRadius" Value="1" />
+      <Setter Property="Padding" Value="12,4" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#F2E9D2" />
+      <Setter Property="BorderBrush" Value="#F2E9D2" />
+      <Setter Property="Foreground" Value="{StaticResource VilmGreen}" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="MinWidth" Value="130" />
+    </Style>
+    <Style Selector="Button.lang">
+      <Setter Property="Width" Value="36" />
+      <Setter Property="Height" Value="24" />
+      <Setter Property="MinWidth" Value="36" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.lang.active">
+      <Setter Property="Background" Value="{StaticResource VilmGreen}" />
+      <Setter Property="Foreground" Value="#F2E9D2" />
+      <Setter Property="BorderBrush" Value="{StaticResource VilmGreen}" />
+    </Style>
+    <Style Selector="Button.details">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="Background" Value="#F4F0E7" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.footerLink">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#F2E9D2" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="2,0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.footerLink:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="TextElement.Foreground" Value="#F2E9D2" />
+    </Style>
+    <Style Selector="Button.footerLink:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="TextElement.Foreground" Value="#F2E9D2" />
+    </Style>
+    <Style Selector="TextBox, ComboBox, NumericUpDown">
+      <Setter Property="Background" Value="#FFFDF8" />
+      <Setter Property="Foreground" Value="{StaticResource VilmText}" />
+      <Setter Property="BorderBrush" Value="{StaticResource VilmBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="1" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Border Grid.Row="0" Background="{StaticResource VilmTitlebar}" Padding="16,10">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Text="Vilm Lyrics Aligner" FontSize="15" FontWeight="Bold" />
+          <TextBlock x:Name="SubtitleText" Classes="dim" Text="Original lyrics to precisely timed subtitles" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+          <Button x:Name="HelpButton" Content="Help" Height="24" Padding="10,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="Help_Click" />
+          <Button x:Name="EnglishButton" Classes="lang" Content="EN" Click="English_Click" />
+          <Button x:Name="KoreanButton" Classes="lang" Content="KR" Click="Korean_Click" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer x:Name="MainScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                  Padding="8,7,8,0">
+      <StackPanel>
+        <Border Classes="card">
+          <StackPanel Spacing="5">
+            <TextBlock x:Name="MediaHeading" Classes="section" Text="Media" />
+            <TextBlock x:Name="MediaDescription" Classes="dim" Text="Choose the video or audio that matches your edit." />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <Border Background="#FFFDF8" BorderBrush="{StaticResource VilmBorder}" BorderThickness="1" Padding="9,7">
+                <TextBlock x:Name="MediaNameText" Classes="mono" Text="No media selected" TextTrimming="CharacterEllipsis" />
+              </Border>
+              <Button Grid.Column="1" x:Name="ChooseMediaButton" Content="Choose media" Click="ChooseMedia_Click" />
+            </Grid>
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="16">
+              <RadioButton x:Name="FullFileRadio" Content="Full file" IsChecked="True" Click="RangeMode_Changed" />
+              <RadioButton Grid.Column="1" x:Name="SelectionRadio" Content="Selected range" Click="RangeMode_Changed" />
+              <TextBlock Grid.Column="3" x:Name="RangeText" Classes="dim mono" Text="00:00.00 — 00:00.00" />
+            </Grid>
+            <Border Height="64" Background="#20251F" BorderBrush="{StaticResource VilmBorder}" BorderThickness="1">
+              <local:WaveformControl x:Name="Waveform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            </Border>
+            <TextBlock x:Name="RangeHintText" Classes="dim" FontSize="12" Text="Drag over the waveform to process only part of a long file." />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card smart">
+          <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto" RowSpacing="6">
+            <TextBlock x:Name="LyricsHeading" Classes="section" Text="Original lyrics" />
+            <Button Grid.Column="1" x:Name="LoadLyricsButton" Content="Load TXT" Click="LoadLyrics_Click" />
+            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" x:Name="LyricsDescription" Classes="dim" Text="Paste the complete lyrics. Your text always remains the subtitle source." />
+            <TextBox Grid.Row="2" Grid.ColumnSpan="2" x:Name="LyricsBox" Height="132" AcceptsReturn="True" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Auto" Padding="9" />
+          </Grid>
+        </Border>
+
+        <Border Classes="card last">
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="10">
+              <TextBlock x:Name="ModeLabel" Classes="label" Text="Mode" VerticalAlignment="Center" />
+              <ComboBox Grid.Column="1" x:Name="ModeBox" SelectedIndex="0" SelectionChanged="Mode_Changed">
+                <ComboBoxItem Content="Auto mode (recommended)" />
+                <ComboBoxItem Content="Manual (advanced)" />
+              </ComboBox>
+              <TextBlock Grid.Column="2" x:Name="DeviceLabel" Classes="label" Text="Processing device" VerticalAlignment="Center" />
+              <ComboBox Grid.Column="3" x:Name="DeviceBox" MinWidth="145" FontFamily="Consolas" FontWeight="Bold" />
+            </Grid>
+            <WrapPanel x:Name="ManualOptions" IsVisible="False" Orientation="Horizontal">
+              <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,8,6">
+                <TextBlock x:Name="MaxCharsLabel" Text="Max characters" VerticalAlignment="Center" />
+                <NumericUpDown x:Name="MaxCharsInput" Width="136" Minimum="1" Maximum="80" Value="30" FormatString="0 chars" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,8,6">
+                <TextBlock x:Name="MaxDurationLabel" Text="Max seconds" VerticalAlignment="Center" />
+                <NumericUpDown x:Name="MaxDurationInput" Width="118" Minimum="3" Maximum="30" Value="10" FormatString="0 s" />
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+                <TextBlock x:Name="EndHoldLabel" Text="End hold" VerticalAlignment="Center" />
+                <ComboBox x:Name="EndHoldBox" Width="92" SelectedIndex="1">
+                  <ComboBoxItem Content="0.3 s" />
+                  <ComboBoxItem Content="0.5 s" />
+                  <ComboBoxItem Content="1.0 s" />
+                  <ComboBoxItem Content="1.5 s" />
+                </ComboBox>
+              </StackPanel>
+            </WrapPanel>
+            <Button x:Name="DetailsButton" Classes="details" Click="Details_Click">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="DetailsTitle" Classes="label" Text="Details" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" x:Name="DetailsArrow" Text="▾" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
+              </Grid>
+            </Button>
+            <Border x:Name="DetailsPanel" IsVisible="False" HorizontalAlignment="Stretch" Background="#EDE9DF" BorderBrush="{StaticResource VilmBorder}" BorderThickness="1" Padding="8">
+              <Grid RowDefinitions="*,Auto" RowSpacing="7">
+                <TextBox x:Name="LogBox" Height="118" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                         Background="#20251F" Foreground="#F2E9D2" BorderThickness="0" Padding="8"
+                         PlaceholderText="Processing messages will appear here." FontFamily="Consolas" FontSize="10.5" FontWeight="Bold" />
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                  <TextBlock x:Name="LogHintText" Classes="dim" Text="Open this panel only when you need progress details or support information." VerticalAlignment="Center" />
+                  <Button Grid.Column="1" x:Name="CopyLogButton" Content="Copy log" IsEnabled="False" Click="CopyLog_Click" />
+                </Grid>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Border>
+        <Border x:Name="ContentBottomSpacer" Height="16" Background="Transparent" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="2" Background="{StaticResource VilmCard}" BorderBrush="{StaticResource VilmBorder}" BorderThickness="0,1,0,0" Padding="12,7">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <StackPanel VerticalAlignment="Center" Spacing="2">
+          <TextBlock x:Name="StatusText" FontWeight="Bold" Text="Ready" TextTrimming="CharacterEllipsis" />
+          <ProgressBar x:Name="Progress" Height="4" IsVisible="False" IsIndeterminate="True" Foreground="{StaticResource VilmAmber}" />
+        </StackPanel>
+        <Button Grid.Column="1" x:Name="CancelButton" Content="Cancel" IsVisible="False" Click="Cancel_Click" />
+        <Button Grid.Column="2" x:Name="GenerateButton" Content="Generate SRT" Click="Generate_Click" />
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="3" Background="{StaticResource VilmGreen}" MinHeight="32" Padding="8,5">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+          <TextBlock x:Name="SupportLabel" Foreground="#F2E9D2" FontSize="12" VerticalAlignment="Center" Text="Support:" />
+          <Button x:Name="WebsiteButton" Classes="footerLink" Content="voiceandfilm.com" Click="Website_Click" />
+          <TextBlock Foreground="#F2E9D2" FontSize="12" VerticalAlignment="Center" Text="|" Margin="3,0" />
+          <Button x:Name="InstagramButton" Classes="footerLink" Content="@voiceandfilm" Click="Instagram_Click" />
+        </StackPanel>
+        <TextBlock Grid.Column="1" x:Name="CopyrightText" Foreground="#F2E9D2" FontSize="12" VerticalAlignment="Center" Text="© 2026 Vilm" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

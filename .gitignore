@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.agents/
+.codex/
+legacy/
+lyrics_aligner/backends/qwen.py
+lyrics_aligner/backends/demucs_torchaudio_legacy.py
+scripts/profile_qwen.py
+scripts/profile_qwen_fp16.py
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# .NET / Avalonia
+desktop/**/bin/
+desktop/**/obj/
+installer/windows/Setup/bin/
+installer/windows/Setup/obj/
+
+# Generated installer payloads
+installer/windows/build/
+installer/windows/dist/
+installer/windows/Setup/assets/payload.zip
+installer/macos/build/
+installer/macos/dist/
+
+# Local validation output
+auto-replay*.json
+auto-replay*.srt
+*-validation.json
+*-validation.srt

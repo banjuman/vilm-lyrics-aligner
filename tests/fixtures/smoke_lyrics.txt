@@ -1,0 +1,3 @@
+Hello, this is a timing test.
+We already know every word.
+Please align this text to the audio.
