@@ -1,8 +1,32 @@
 from __future__ import annotations
 
+import sys
+from functools import wraps
 from pathlib import Path
 
 from ..device import choose_devices
+
+
+def _suppress_progress_when_redirected(
+    demucs_separate, *, interactive: bool | None = None
+) -> None:
+    """Hide Demucs' terminal progress bar when output is captured by a GUI."""
+    if interactive is None:
+        interactive = sys.stderr.isatty()
+    if interactive:
+        return
+
+    apply_model = demucs_separate.apply_model
+    if getattr(apply_model, "_lyrics_aligner_silent_progress", False):
+        return
+
+    @wraps(apply_model)
+    def apply_model_without_progress(*args, **kwargs):
+        kwargs["progress"] = False
+        return apply_model(*args, **kwargs)
+
+    setattr(apply_model_without_progress, "_lyrics_aligner_silent_progress", True)
+    demucs_separate.apply_model = apply_model_without_progress
 
 
 def _install_soundfile_io() -> None:
@@ -39,6 +63,7 @@ def _install_soundfile_io() -> None:
 
     demucs_separate.load_track = load_track
     demucs_separate.save_audio = save_audio
+    _suppress_progress_when_redirected(demucs_separate)
 
 
 def separate_vocals(

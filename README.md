@@ -32,7 +32,9 @@ Defaults target cues below roughly 30 characters and 10 seconds. These are edito
 
 ## Windows installer
 
-`installer\windows\dist\VilmLyricsAlignerSetup.exe` is a single-file bootstrap installer that also carries the native Avalonia Desktop UI. It installs an isolated private Python runtime and model environment without modifying system Python or PATH. Desktop is always installed. If DaVinci Resolve Studio is detected, the installer also offers the optional Resolve integration.
+`installer\windows\dist\VilmLyricsAlignerSetup.exe` is a single-file bootstrap installer that also carries the native Avalonia Desktop UI. It installs an isolated private Python runtime and model environment for the app without modifying `PATH` or `PYTHONHOME`. Desktop is always installed. If DaVinci Resolve Studio is detected, the installer also offers the optional Resolve integration.
+
+Resolve executes Workflow Integration scripts with a discoverable shared Python rather than the app's private AI runtime. When that option is selected, setup checks for a registered Python.org 3.12 installation and, only when absent, installs the bundled official Python 3.12 package before adding the panel. The package is version/hash pinned and publisher-verified during the native Windows build. Shared Resolve Python is intentionally retained when Vilm is removed because other Resolve scripts may depend on it.
 
 NVIDIA systems use the verified CUDA-enabled PyTorch package when it works; other systems use CPU. The installer does not install or replace the system CUDA Toolkit. Models and runtime files live under `%LOCALAPPDATA%\LyricsAligner` and are removed by the registered uninstaller.
 

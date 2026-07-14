@@ -20,6 +20,8 @@ For a partial job, set both timeline In and Out marks and select **In/Out range*
 
 The direct panel requires Resolve Studio on Windows or macOS. Resolve Free users can use the Desktop app and import its SRT.
 
+When Resolve integration is selected during setup, the installer checks for Python.org 3.12 and installs the bundled official package only if Resolve does not already have it. This shared scripting runtime is separate from the app's private AI runtime and is retained when Vilm is uninstalled because other Resolve scripts may use it.
+
 ## Auto and Manual modes
 
 - **Auto mode** uses line breaks as strong hints, but may split a long or slow line and merge only an obvious display wrap.

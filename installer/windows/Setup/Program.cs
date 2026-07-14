@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using Microsoft.Win32;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 
@@ -16,7 +18,9 @@ internal static class Program
         {
             using Stream? payload = Assembly.GetExecutingAssembly()
                 .GetManifestResourceStream("LyricsAligner.payload.zip");
-            return payload is { Length: > 0 } ? 0 : 2;
+            using Stream? resolvePython = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("LyricsAligner.python-3.12.10-amd64.exe");
+            return payload is { Length: > 0 } && resolvePython is { Length: > 0 } ? 0 : 2;
         }
 
         ApplicationConfiguration.Initialize();
@@ -30,6 +34,10 @@ internal sealed class InstallerForm : Form
     private const string UvVersion = "0.11.28";
     private const string UvZipSha256 =
         "0A23463216D09C6A72FF80EF5DC5A795F07DC1575CB84D24596C2F124A441B7B";
+    private const string ResolvePythonVersion = "3.12.10";
+    private const string ResolvePythonResource = "LyricsAligner.python-3.12.10-amd64.exe";
+    private const string ResolvePythonSha256 =
+        "67B5635E80EA51072B87941312D00EC8927C4DB9BA18938F7AD2D27B328B95FB";
     private readonly Label _status = new() { AutoSize = false, Dock = DockStyle.Top, Height = 48 };
     private readonly ProgressBar _progress = new() { Dock = DockStyle.Top, Height = 22, Minimum = 0, Maximum = 100 };
     private readonly TextBox _log = new()
@@ -191,6 +199,22 @@ internal sealed class InstallerForm : Form
                 null,
                 cancellationToken);
 
+            if (installResolve)
+            {
+                SetStage(84, "Preparing Python for DaVinci Resolve integration...");
+                string? resolvePython = FindResolvePython312();
+                if (resolvePython is null)
+                {
+                    await InstallResolvePythonAsync(appRoot, cancellationToken);
+                    resolvePython = FindResolvePython312();
+                }
+                if (resolvePython is null)
+                {
+                    throw new InvalidOperationException("Python 3.12 was installed but DaVinci Resolve cannot discover it.");
+                }
+                Log($"Resolve Python: {resolvePython}");
+            }
+
             string pluginDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 "Blackmagic Design", "DaVinci Resolve", "Support", "Workflow Integration Plugins");
@@ -276,6 +300,92 @@ internal sealed class InstallerForm : Form
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             "Blackmagic Design", "DaVinci Resolve", "Resolve.exe");
         return File.Exists(candidate) ? candidate : null;
+    }
+
+    private static string? FindResolvePython312()
+    {
+        foreach (RegistryHive hive in new[] { RegistryHive.CurrentUser, RegistryHive.LocalMachine })
+        {
+            try
+            {
+                using RegistryKey baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+                using RegistryKey? installKey = baseKey.OpenSubKey(
+                    @"SOFTWARE\Python\PythonCore\3.12\InstallPath");
+                string? installPath = installKey?.GetValue(null)?.ToString();
+                if (string.IsNullOrWhiteSpace(installPath)) continue;
+
+                string pythonExe = Path.Combine(installPath, "python.exe");
+                string stableDll = Path.Combine(installPath, "python3.dll");
+                if (File.Exists(pythonExe) && File.Exists(stableDll)) return pythonExe;
+            }
+            catch (Exception exc) when (exc is IOException or UnauthorizedAccessException)
+            {
+                // Try the next registry hive.
+            }
+        }
+        return null;
+    }
+
+    private async Task InstallResolvePythonAsync(
+        string workingDirectory,
+        CancellationToken cancellationToken)
+    {
+        string installerPath = Path.Combine(
+            Path.GetTempPath(),
+            $"Vilm-Resolve-Python-{ResolvePythonVersion}-{Guid.NewGuid():N}.exe");
+        try
+        {
+            await using (Stream embedded = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream(ResolvePythonResource)
+                ?? throw new InvalidOperationException("The bundled Resolve Python installer is missing."))
+            await using (FileStream destination = File.Create(installerPath))
+            {
+                await embedded.CopyToAsync(destination, cancellationToken);
+            }
+
+            string actualHash;
+            await using (FileStream installer = File.OpenRead(installerPath))
+            {
+                actualHash = Convert.ToHexString(
+                    await SHA256.HashDataAsync(installer, cancellationToken));
+            }
+            if (!string.Equals(actualHash, ResolvePythonSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Resolve Python installer verification failed. expected={ResolvePythonSha256}, actual={actualHash}");
+            }
+
+            using X509Certificate signer = X509Certificate.CreateFromSignedFile(installerPath);
+            if (!signer.Subject.Contains("Python Software Foundation", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Resolve Python installer publisher is unexpected: {signer.Subject}");
+            }
+
+            Log($"Installing shared Python {ResolvePythonVersion} for DaVinci Resolve...");
+            await RunAsync(
+                installerPath,
+                [
+                    "/quiet",
+                    "InstallAllUsers=1",
+                    "Include_launcher=0",
+                    "InstallLauncherAllUsers=0",
+                    "AssociateFiles=0",
+                    "Shortcuts=0",
+                    "Include_doc=0",
+                    "Include_test=0",
+                    "Include_tcltk=0",
+                    "Include_pip=0",
+                    "PrependPath=0",
+                ],
+                workingDirectory,
+                null,
+                cancellationToken);
+        }
+        finally
+        {
+            if (File.Exists(installerPath)) File.Delete(installerPath);
+        }
     }
 
     private static void ResetPrivateRuntime(
@@ -415,6 +525,8 @@ internal sealed class InstallerForm : Form
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
             CreateNoWindow = true,
         };
         foreach (string argument in arguments)

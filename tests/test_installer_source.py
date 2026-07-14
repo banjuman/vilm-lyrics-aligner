@@ -54,6 +54,32 @@ class WindowsInstallerSourceTests(unittest.TestCase):
             source.index("ZipFile.ExtractToDirectory(zipPath"),
         )
 
+    def test_resolve_python_is_bundled_verified_and_installed_conditionally(self):
+        source = PROGRAM_SOURCE.read_text(encoding="utf-8")
+        build = (PROJECT_ROOT / "installer" / "windows" / "build-installer.ps1").read_text(
+            encoding="utf-8"
+        )
+        project = (
+            PROJECT_ROOT / "installer" / "windows" / "Setup" / "LyricsAligner.Setup.csproj"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('ResolvePythonVersion = "3.12.10"', source)
+        self.assertIn(
+            "67B5635E80EA51072B87941312D00EC8927C4DB9BA18938F7AD2D27B328B95FB",
+            source,
+        )
+        self.assertIn("FindResolvePython312()", source)
+        self.assertIn("RegistryHive.CurrentUser", source)
+        self.assertIn("RegistryHive.LocalMachine", source)
+        self.assertIn("InstallResolvePythonAsync(appRoot", source)
+        self.assertIn('"InstallAllUsers=1"', source)
+        self.assertIn('"PrependPath=0"', source)
+        self.assertNotIn("PYTHONHOME", source)
+        self.assertIn("python-3.12.10-amd64.exe", project)
+        self.assertIn("www.python.org/ftp/python", build)
+        self.assertIn("Get-AuthenticodeSignature", build)
+        self.assertIn("Python Software Foundation", build)
+
 
 if __name__ == "__main__":
     unittest.main()

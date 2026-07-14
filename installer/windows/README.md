@@ -12,13 +12,15 @@
 5. 검증된 NVIDIA 환경은 CUDA 12.6 PyTorch, 나머지는 CPU 전용 PyTorch 설치
 6. 고정된 앱 의존성과 Vilm Lyrics Aligner `1.0.0` 설치
 7. Whisper `small`, Demucs `htdemucs`, Silero VAD 다운로드와 자체 진단
-8. 선택한 경우 `%PROGRAMDATA%`의 Resolve Workflow Integration 폴더에 패널 설치
-9. 사용자 설정·시작 메뉴 바로가기·Windows 앱 제거 항목 등록
-10. 설치용 uv 캐시 삭제
+8. Resolve 연동을 선택한 경우 등록된 Python.org 3.12를 확인하고, 없으면 서명과 SHA-256을 검증한 동봉 공식 패키지 설치
+9. 선택한 경우 `%PROGRAMDATA%`의 Resolve Workflow Integration 폴더에 패널 설치
+10. 사용자 설정·시작 메뉴 바로가기·Windows 앱 제거 항목 등록
+11. 설치용 uv 캐시 삭제
 
-시스템 Python과 시스템 `PATH`는 변경하지 않는다. 모델과 실행 장치 선택도
-사용자에게 노출하지 않는다. EXE는 부트스트랩이며 해당 PC에 필요한 런타임과
-모델은 설치 중 다운로드한다.
+앱의 AI Python은 전용으로 유지하며 시스템 `PATH`와 `PYTHONHOME`을 변경하지 않는다.
+단, Resolve 연동을 선택했고 호환 Python이 없을 때는 Resolve가 발견할 수 있는
+공용 Python.org 3.12를 설치한다. 모델과 실행 장치 선택은 사용자에게 노출하지 않는다.
+EXE는 부트스트랩이며 해당 PC에 필요한 AI 런타임과 모델은 설치 중 다운로드한다.
 
 uv는 버전과 Windows x64 ZIP의 SHA-256을 고정하며, 설치기는 압축을 풀기 전에
 무결성을 검증한다. 제거 프로그램은 Resolve가 실행 중이면 중단하며, 설치된

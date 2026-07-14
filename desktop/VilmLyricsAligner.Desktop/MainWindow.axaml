@@ -8,7 +8,7 @@
         MinWidth="560" MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="#F2E9D2"
-        FontFamily="Segoe UI"
+        FontFamily="Segoe UI, Malgun Gothic, Apple SD Gothic Neo"
         FontSize="11">
   <Window.Resources>
     <SolidColorBrush x:Key="VilmBackground">#F2E9D2</SolidColorBrush>
@@ -26,16 +26,16 @@
   </Window.Resources>
   <Window.Styles>
     <Style Selector="Button, TextBox, ComboBox, ComboBoxItem, NumericUpDown, RadioButton">
-      <Setter Property="FontFamily" Value="Segoe UI" />
+      <Setter Property="FontFamily" Value="Segoe UI, Malgun Gothic, Apple SD Gothic Neo" />
       <Setter Property="FontSize" Value="11" />
     </Style>
     <Style Selector="TextBlock">
-      <Setter Property="FontFamily" Value="Segoe UI" />
+      <Setter Property="FontFamily" Value="Segoe UI, Malgun Gothic, Apple SD Gothic Neo" />
       <Setter Property="FontSize" Value="11" />
       <Setter Property="Foreground" Value="{StaticResource VilmText}" />
     </Style>
     <Style Selector="TextBlock.dim">
-      <Setter Property="FontFamily" Value="Segoe UI" />
+      <Setter Property="FontFamily" Value="Segoe UI, Malgun Gothic, Apple SD Gothic Neo" />
       <Setter Property="FontSize" Value="11" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Foreground" Value="{StaticResource VilmDim}" />
@@ -48,11 +48,11 @@
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
     <Style Selector="TextBlock.mono">
-      <Setter Property="FontFamily" Value="Consolas" />
+      <Setter Property="FontFamily" Value="Consolas, Malgun Gothic, Apple SD Gothic Neo" />
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
     <Style Selector="NumericUpDown">
-      <Setter Property="FontFamily" Value="Consolas" />
+      <Setter Property="FontFamily" Value="Consolas, Malgun Gothic, Apple SD Gothic Neo" />
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
     <Style Selector="Border.card">
@@ -193,7 +193,7 @@
                 <ComboBoxItem Content="Manual (advanced)" />
               </ComboBox>
               <TextBlock Grid.Column="2" x:Name="DeviceLabel" Classes="label" Text="Processing device" VerticalAlignment="Center" />
-              <ComboBox Grid.Column="3" x:Name="DeviceBox" MinWidth="145" FontFamily="Consolas" FontWeight="Bold" />
+              <ComboBox Grid.Column="3" x:Name="DeviceBox" MinWidth="145" FontFamily="Consolas, Malgun Gothic, Apple SD Gothic Neo" FontWeight="Bold" />
             </Grid>
             <WrapPanel x:Name="ManualOptions" IsVisible="False" Orientation="Horizontal">
               <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,8,6">
@@ -224,7 +224,7 @@
               <Grid RowDefinitions="*,Auto" RowSpacing="7">
                 <TextBox x:Name="LogBox" Height="118" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                          Background="#20251F" Foreground="#F2E9D2" BorderThickness="0" Padding="8"
-                         PlaceholderText="Processing messages will appear here." FontFamily="Consolas" FontSize="10.5" FontWeight="Bold" />
+                         PlaceholderText="Processing messages will appear here." FontFamily="Consolas, Malgun Gothic, Apple SD Gothic Neo" FontSize="10.5" FontWeight="Bold" />
                 <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                   <TextBlock x:Name="LogHintText" Classes="dim" Text="Open this panel only when you need progress details or support information." VerticalAlignment="Center" />
                   <Button Grid.Column="1" x:Name="CopyLogButton" Content="Copy log" IsEnabled="False" Click="CopyLog_Click" />

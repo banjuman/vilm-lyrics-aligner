@@ -28,6 +28,7 @@ installer/windows/Setup/obj/
 installer/windows/build/
 installer/windows/dist/
 installer/windows/Setup/assets/payload.zip
+installer/windows/Setup/assets/python-*-amd64.exe
 installer/macos/build/
 installer/macos/dist/
 

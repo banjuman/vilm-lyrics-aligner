@@ -23,5 +23,6 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\payload.zip" LogicalName="LyricsAligner.payload.zip" />
+    <EmbeddedResource Include="assets\python-3.12.10-amd64.exe" LogicalName="LyricsAligner.python-3.12.10-amd64.exe" />
   </ItemGroup>
 </Project>

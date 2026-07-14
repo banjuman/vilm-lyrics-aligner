@@ -64,6 +64,11 @@ backends are not shown.
   for 30 days.
 - Windows preferences and private runtime: `%LOCALAPPDATA%\LyricsAligner`.
 - macOS preferences, private runtime, and models: `~/Library/Application Support/Vilm Lyrics Aligner`.
+- The app's AI Python remains private on every platform. Resolve Workflow
+  Integration scripts need a Python.org runtime discoverable by Resolve itself;
+  installers add the pinned shared Python 3.12 package only when Resolve
+  integration is selected and a compatible installation is absent. They do not
+  set global `PYTHONHOME` or prepend Python to `PATH`.
 - The macOS Resolve panel is installed to Blackmagic Design's system Workflow
   Integration Plugins folder after an explicit administrator prompt.
 - Temporary media, WAV and stems are deleted on completion or failure; stale

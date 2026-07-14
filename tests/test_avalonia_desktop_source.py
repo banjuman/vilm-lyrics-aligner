@@ -15,9 +15,9 @@ class AvaloniaDesktopSourceTests(unittest.TestCase):
         self.assertIn('Background="#20251F"', xaml)
         self.assertIn('Content="voiceandfilm.com"', xaml)
         self.assertIn('Content="@voiceandfilm"', xaml)
-        self.assertIn('FontFamily="Segoe UI"', xaml)
+        self.assertIn('FontFamily="Segoe UI, Malgun Gothic, Apple SD Gothic Neo"', xaml)
         self.assertIn('Text="Vilm Lyrics Aligner" FontSize="15" FontWeight="Bold"', xaml)
-        self.assertIn('FontFamily="Consolas"', xaml)
+        self.assertIn('FontFamily="Consolas, Malgun Gothic, Apple SD Gothic Neo"', xaml)
         self.assertIn('<Setter Property="FontWeight" Value="SemiBold" />', xaml)
         self.assertIn('Button.footerLink:pointerover', xaml)
         self.assertIn('Button.footerLink:pressed', xaml)
@@ -81,14 +81,19 @@ class AvaloniaDesktopSourceTests(unittest.TestCase):
     def test_alignment_runs_in_a_cancellable_child_process(self):
         source = (DESKTOP / "EngineBridge.cs").read_text(encoding="utf-8")
         self.assertIn("CreateNoWindow = true", source)
+        self.assertIn("StandardOutputEncoding = Encoding.UTF8", source)
+        self.assertIn("StandardErrorEncoding = Encoding.UTF8", source)
         self.assertIn("process.Kill(true)", source)
         self.assertIn('"--timeline-anchor"', source)
         self.assertIn('"--partial-range"', source)
 
     def test_installer_publishes_and_embeds_native_desktop(self):
         build = (ROOT / "installer" / "windows" / "build-installer.ps1").read_text(encoding="utf-8")
+        setup = (ROOT / "installer" / "windows" / "Setup" / "Program.cs").read_text(encoding="utf-8")
         self.assertIn("dotnet publish $DesktopProject", build)
         self.assertIn('Join-Path $Stage "desktop\\VilmLyricsAligner.exe"', build)
+        self.assertIn("StandardOutputEncoding = Encoding.UTF8", setup)
+        self.assertIn("StandardErrorEncoding = Encoding.UTF8", setup)
 
 
 if __name__ == "__main__":

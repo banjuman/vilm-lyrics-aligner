@@ -17,6 +17,7 @@ licenses. The links below are the authoritative source and license locations.
 | [librosa](https://github.com/librosa/librosa) | Audio loading and analysis | ISC |
 | [lameenc](https://github.com/chrisstaite/lameenc) | Demucs audio dependency | LGPL-3.0-or-later |
 | [uv](https://github.com/astral-sh/uv) | Verified private Python/runtime installation | MIT OR Apache-2.0 |
+| [CPython](https://www.python.org/) | Private AI runtime and optional shared Resolve scripting runtime | Python Software Foundation License Version 2 |
 | [Avalonia](https://github.com/AvaloniaUI/Avalonia) | Native cross-platform desktop interface | MIT |
 
 Additional transitive Python packages are installed from their original PyPI

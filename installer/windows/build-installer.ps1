@@ -3,6 +3,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:AVALONIA_TELEMETRY_OPTOUT = "1"
+$env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
 $WindowsRoot = $PSScriptRoot
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $WindowsRoot)
 $SetupRoot = Join-Path $WindowsRoot "Setup"
@@ -11,6 +13,11 @@ $Stage = Join-Path $WindowsRoot "build\payload"
 $DesktopPublish = Join-Path $WindowsRoot "build\desktop"
 $DesktopProject = Join-Path $ProjectRoot "desktop\VilmLyricsAligner.Desktop\VilmLyricsAligner.Desktop.csproj"
 $PayloadZip = Join-Path $Assets "payload.zip"
+$ResolvePythonVersion = "3.12.10"
+$ResolvePythonInstaller = Join-Path $Assets "python-$ResolvePythonVersion-amd64.exe"
+$ResolvePythonUrl = "https://www.python.org/ftp/python/$ResolvePythonVersion/python-$ResolvePythonVersion-amd64.exe"
+$ResolvePythonSha256 = "67B5635E80EA51072B87941312D00EC8927C4DB9BA18938F7AD2D27B328B95FB"
+$ResolvePythonPublisher = "Python Software Foundation"
 $Output = Join-Path $WindowsRoot "dist"
 
 $ResolvedProject = [IO.Path]::GetFullPath($ProjectRoot).TrimEnd('\') + '\'
@@ -19,6 +26,28 @@ foreach ($Target in @($Stage, $DesktopPublish, $Assets, $Output)) {
     if (-not $ResolvedTarget.StartsWith($ResolvedProject, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Build target escaped the workspace: $ResolvedTarget"
     }
+}
+
+if (-not (Test-Path -LiteralPath $ResolvePythonInstaller -PathType Leaf)) {
+    $DownloadPath = "$ResolvePythonInstaller.download"
+    Remove-Item -LiteralPath $DownloadPath -Force -ErrorAction SilentlyContinue
+    Invoke-WebRequest -UseBasicParsing -Uri $ResolvePythonUrl -OutFile $DownloadPath
+    Move-Item -LiteralPath $DownloadPath -Destination $ResolvePythonInstaller -Force
+}
+$ResolvePythonActualHash = (Get-FileHash -LiteralPath $ResolvePythonInstaller -Algorithm SHA256).Hash
+if (-not [string]::Equals(
+    $ResolvePythonActualHash,
+    $ResolvePythonSha256,
+    [StringComparison]::OrdinalIgnoreCase)) {
+    Remove-Item -LiteralPath $ResolvePythonInstaller -Force
+    throw "Resolve Python installer hash verification failed. expected=$ResolvePythonSha256 actual=$ResolvePythonActualHash"
+}
+$ResolvePythonSignature = Get-AuthenticodeSignature -LiteralPath $ResolvePythonInstaller
+if ($ResolvePythonSignature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
+    throw "Resolve Python installer signature is invalid: $($ResolvePythonSignature.StatusMessage)"
+}
+if ($ResolvePythonSignature.SignerCertificate.Subject -notlike "*$ResolvePythonPublisher*") {
+    throw "Resolve Python installer publisher is unexpected: $($ResolvePythonSignature.SignerCertificate.Subject)"
 }
 
 foreach ($Target in @($Stage, $DesktopPublish, $Output)) {

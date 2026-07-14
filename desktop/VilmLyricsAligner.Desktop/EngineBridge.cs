@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 
 namespace VilmLyricsAligner.Desktop;
@@ -159,6 +160,8 @@ internal sealed class EngineBridge(EngineRuntime runtime)
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
             CreateNoWindow = true,
         };
         foreach (string argument in arguments)
