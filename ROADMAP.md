@@ -31,7 +31,7 @@
 - 설치기에서 Desktop은 기본 설치하고 Resolve Studio 연동은 감지 시 선택 설치한다.
 - Windows 시작 메뉴/제거 항목과 macOS 전용 앱 데이터·제거 스크립트를 구성했다.
 - macOS 첫 실행 전용 런타임 설치, Whisper MPS/Metal 검증, CPU 폴백과 Resolve Studio 선택 설치를 구현했다.
-- Apple Silicon `.app`/DMG 빌드와 Developer ID 서명·공증 경로를 구현했으나 실제 M1 Pro 검증은 남아 있다.
+- Apple Silicon `.app`/DMG 빌드와 Developer ID 서명·공증 경로를 구현했고, M1 Pro 실기 검증까지 완료했다.
 
 ## 현재 품질 기준선
 
@@ -62,12 +62,12 @@
    확인한다.
 4. 설치 로그에 비밀정보나 불필요한 사용자 경로가 남지 않는지 점검한다.
 
-### P0 — Apple Silicon Mac 실기 검증
+### 완료 — Apple Silicon Mac 실기 검증
 
-1. M1 Pro 16GB에서 ad-hoc DMG 빌드, 첫 실행 전용 런타임 설치와 `mps` 검증을 확인한다.
-2. 전체 파일·파형 선택 구간·CPU 폴백·취소가 Windows 결과와 구조적으로 같은지 확인한다.
-3. Resolve Studio 패널 설치, 전체 타임라인과 In/Out 자동 배치, 마크 복원을 확인한다.
-4. 앱/모델/패널 제거 후 시스템 Python과 다른 프로젝트 환경이 그대로인지 확인한다.
+- M1 Pro 16GB에서 ad-hoc DMG 설치, 첫 실행 전용 런타임 설치와 `mps` 검증을 완료했다.
+- 전체 파일·파형 선택 구간·CPU 폴백·취소가 정상 동작함을 확인했다.
+- Resolve Studio 패널 설치, 전체 타임라인과 In/Out 자동 배치, 마크 복원을 확인했다.
+- 앱/모델/패널 제거 후 시스템 Python과 다른 프로젝트 환경이 유지됨을 확인했다.
 
 ### P1 — 설치 경험 마감
 
@@ -98,8 +98,5 @@
 - Windows/macOS 검증이 끝나기 전에 원문 없는 모드로 범위를 넓히지 않는다.
 
 ## 다음 재개 시 첫 작업
-
-저장소를 GitHub에 올린 뒤 M1 Pro에서 `installer/macos/build-macos.sh`를 실행하고
-`docs/MAC_TEST_PLAN.md` 순서대로 첫 설치, Metal/CPU, standalone 선택 구간과 Resolve
-Studio 전체/In-Out 연동을 검증한다. 이 실기 검증 전에는 macOS DMG를 일반 사용자에게
-배포하지 않는다.
+Mac 실기 검증은 완료됐다. 이후 macOS 변경은 `docs/MAC_TEST_PLAN.md`를 회귀 테스트
+기준으로 사용하고, 공증되지 않은 ad-hoc DMG는 개발·베타 배포용으로만 취급한다.
