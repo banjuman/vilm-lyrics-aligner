@@ -86,6 +86,9 @@ class AvaloniaDesktopSourceTests(unittest.TestCase):
         self.assertIn("process.Kill(true)", source)
         self.assertIn('"--timeline-anchor"', source)
         self.assertIn('"--partial-range"', source)
+        self.assertIn('"--work-dir", workDirectory', source)
+        self.assertIn("Directory.Delete(workDirectory, true)", source)
+        self.assertIn("await process.WaitForExitAsync(CancellationToken.None)", source)
 
     def test_installer_publishes_and_embeds_native_desktop(self):
         build = (ROOT / "installer" / "windows" / "build-installer.ps1").read_text(encoding="utf-8")

@@ -105,9 +105,11 @@ internal sealed class EngineBridge(EngineRuntime runtime)
         CancellationToken cancellationToken)
     {
         string lyricsPath = Path.Combine(Path.GetTempPath(), $"vilm-lyrics-{Guid.NewGuid():N}.txt");
-        await File.WriteAllTextAsync(lyricsPath, request.Lyrics, new System.Text.UTF8Encoding(false), cancellationToken);
+        string workDirectory = Path.Combine(Path.GetTempPath(), $"lyrics-aligner-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(workDirectory);
         try
         {
+            await File.WriteAllTextAsync(lyricsPath, request.Lyrics, new System.Text.UTF8Encoding(false), cancellationToken);
             var arguments = new List<string>
             {
                 "-m", "lyrics_aligner", "align",
@@ -118,6 +120,7 @@ internal sealed class EngineBridge(EngineRuntime runtime)
                 "--end-pad-ms", request.EndHoldMilliseconds.ToString(),
                 "--min-gap-ms", "80",
                 "--timeline-anchor",
+                "--work-dir", workDirectory,
             };
             if (request.Automatic)
             {
@@ -145,6 +148,8 @@ internal sealed class EngineBridge(EngineRuntime runtime)
         finally
         {
             try { File.Delete(lyricsPath); } catch (IOException) { }
+            try { Directory.Delete(workDirectory, true); } catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
     }
 
@@ -208,6 +213,7 @@ internal sealed class EngineBridge(EngineRuntime runtime)
         catch (OperationCanceledException)
         {
             try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { }
+            try { await process.WaitForExitAsync(CancellationToken.None); } catch (InvalidOperationException) { }
             throw;
         }
         return new ProcessResult(process.ExitCode, string.Join(Environment.NewLine, output), string.Join(Environment.NewLine, error));

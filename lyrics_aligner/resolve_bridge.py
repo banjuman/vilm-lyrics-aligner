@@ -374,17 +374,23 @@ def import_srt_to_timeline(project, timeline, srt_path: str | Path, record_frame
     srt_path = Path(srt_path).resolve()
     if not srt_path.is_file():
         raise FileNotFoundError(srt_path)
-    media_pool = project.GetMediaPool()
-    imported = media_pool.ImportMedia([str(srt_path)]) or []
-    if not imported:
-        raise ResolveBridgeError("Resolve could not import the generated SRT into the Media Pool")
-    if timeline.GetTrackCount("subtitle") < 1:
-        timeline.AddTrack("subtitle")
-    appended = media_pool.AppendToTimeline(
-        [{"mediaPoolItem": imported[0], "recordFrame": int(record_frame)}]
-    )
-    if not appended:
-        raise ResolveBridgeError(
-            "SRT was imported into the Media Pool, but Resolve did not append it to the timeline"
+    original_marks = _snapshot_timeline_marks(timeline)
+    try:
+        media_pool = project.GetMediaPool()
+        imported = media_pool.ImportMedia([str(srt_path)]) or []
+        if not imported:
+            raise ResolveBridgeError("Resolve could not import the generated SRT into the Media Pool")
+        if timeline.GetTrackCount("subtitle") < 1:
+            timeline.AddTrack("subtitle")
+        appended = media_pool.AppendToTimeline(
+            [{"mediaPoolItem": imported[0], "recordFrame": int(record_frame)}]
         )
-    return appended
+        if not appended:
+            raise ResolveBridgeError(
+                "SRT was imported into the Media Pool, but Resolve did not append it to the timeline"
+            )
+        return appended
+    finally:
+        # Resolve can clear visible In/Out marks while appending an SRT even
+        # though the temporary render already restored them.
+        _restore_timeline_marks(timeline, original_marks)

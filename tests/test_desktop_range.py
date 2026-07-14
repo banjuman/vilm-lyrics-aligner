@@ -15,6 +15,15 @@ class DesktopRangeTests(unittest.TestCase):
         self.assertEqual(args.range_start, 12.5)
         self.assertEqual(args.range_end, 42.25)
 
+    def test_cli_accepts_caller_owned_work_directory(self):
+        args = build_parser().parse_args(
+            [
+                "align", "media.mov", "lyrics.txt", "-o", "out.srt",
+                "--work-dir", "/tmp/lyrics-aligner-owned",
+            ]
+        )
+        self.assertEqual(args.work_dir, Path("/tmp/lyrics-aligner-owned"))
+
     def test_pipeline_offsets_selected_range_to_original_media(self):
         source = (Path(__file__).resolve().parents[1] / "lyrics_aligner" / "pipeline.py").read_text(
             encoding="utf-8"

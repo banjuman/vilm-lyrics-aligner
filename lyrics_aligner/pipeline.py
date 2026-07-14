@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+from contextlib import nullcontext
 from dataclasses import asdict
 from pathlib import Path
 from typing import Callable, Sequence
@@ -49,6 +50,7 @@ def align_to_srt(
     debug_json: str | Path | None = None,
     messages: list[str] | None = None,
     progress: Callable[[str], None] | None = None,
+    work_dir: str | Path | None = None,
 ) -> list[Cue]:
     audio_path = Path(audio_path)
     output_path = Path(output_path)
@@ -81,7 +83,14 @@ def align_to_srt(
     auto_hidden_gaps: list[HiddenVocalGap] = []
     hidden_timing_cues: list[Cue] = []
 
-    with tempfile.TemporaryDirectory(prefix="lyrics-aligner-") as temporary:
+    if work_dir is None:
+        temporary_context = tempfile.TemporaryDirectory(prefix="lyrics-aligner-")
+    else:
+        temporary_path = Path(work_dir).resolve()
+        temporary_path.mkdir(parents=True, exist_ok=True)
+        temporary_context = nullcontext(str(temporary_path))
+
+    with temporary_context as temporary:
         temporary_path = Path(temporary)
         range_start = max(0.0, float(range_start_seconds))
         if range_start > 0.0 or range_end_seconds is not None:

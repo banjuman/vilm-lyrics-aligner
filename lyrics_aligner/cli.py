@@ -50,6 +50,11 @@ def build_parser() -> argparse.ArgumentParser:
     align.add_argument("--max-duration-ms", type=int, default=10000)
     align.add_argument("--min-gap-ms", type=int, default=80)
     align.add_argument("--debug-json", type=Path)
+    align.add_argument(
+        "--work-dir",
+        type=Path,
+        help="caller-owned temporary directory (removed by the caller)",
+    )
     return parser
 
 
@@ -92,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
                 debug_json=args.debug_json,
                 messages=messages,
                 progress=lambda message: print(message, flush=True),
+                work_dir=args.work_dir,
             )
             for message in messages:
                 print(f"주의: {message}")

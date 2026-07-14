@@ -46,14 +46,17 @@ class FakeTimeline:
 
 
 class FakeMediaPool:
-    def __init__(self):
+    def __init__(self, timeline=None):
         self.append_info = None
+        self.timeline = timeline
 
     def ImportMedia(self, paths):
         return [{"path": paths[0]}]
 
     def AppendToTimeline(self, info):
         self.append_info = info
+        if self.timeline is not None:
+            self.timeline.marks = {}
         return [object()]
 
 
@@ -194,6 +197,23 @@ class ResolveBridgeTests(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(timeline.subtitle_tracks, 1)
         self.assertEqual(media_pool.append_info[0]["recordFrame"], 120)
+
+    def test_import_restores_in_out_marks_cleared_by_resolve(self):
+        marks = {
+            "video": {"in": 240, "out": 480},
+            "audio": {"in": 240, "out": 480},
+        }
+        timeline = FakeTimeline(marks)
+        media_pool = FakeMediaPool(timeline)
+        project = FakeProject(media_pool)
+        with tempfile.TemporaryDirectory() as directory:
+            srt = Path(directory) / "test.srt"
+            srt.write_text(
+                "1\n00:00:00,000 --> 00:00:01,000\nhello\n",
+                encoding="utf-8",
+            )
+            import_srt_to_timeline(project, timeline, srt, 100)
+        self.assertEqual(timeline.marks, marks)
 
 
 if __name__ == "__main__":
