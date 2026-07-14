@@ -17,8 +17,18 @@ development app and choose **Open**. The first-run screen should:
 - explain the private runtime and expected disk use;
 - detect Resolve Studio and preselect its optional integration;
 - finish without opening Terminal;
-- request administrator approval only when installing the Resolve panel;
-- open the normal Vilm Lyrics Aligner window after setup.
+- explain that Resolve integration installs the shared Python.org 3.12 runtime
+  when it is not already present;
+- request one administrator approval for the shared Resolve Python runtime and
+  panel;
+- keep the setup window open while every selected component is installed and
+  verified;
+- show **Open Vilm Lyrics Aligner** only after setup completes, then open the
+  normal window when the user selects it.
+
+On a clean Mac, confirm setup creates
+`/Library/Frameworks/Python.framework/Versions/3.12/Python`. Repeat setup and
+confirm it reuses the existing framework rather than reinstalling it.
 
 Check the saved backend:
 
@@ -73,7 +83,8 @@ After testing, close Resolve and run:
 ```
 
 Confirm that the app, private runtime/models, and Resolve panel are gone while
-system Python and unrelated project environments remain untouched.
+unrelated project environments remain untouched. Python.org 3.12 should remain
+installed because it is a shared Resolve scripting dependency.
 
 ## Report back
 

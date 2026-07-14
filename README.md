@@ -65,7 +65,11 @@ chmod +x installer/macos/*.sh
 The app's first-run screen installs an isolated Python/PyTorch runtime and model
 cache under `~/Library/Application Support/Vilm Lyrics Aligner`. It can also
 install the optional Resolve Studio integration into Blackmagic Design's
-system workflow-plugin folder. See [the macOS build guide](installer/macos/README.md).
+system workflow-plugin folder. When that integration is selected, setup also
+installs the bundled, checksum-verified Python.org 3.12 runtime system-wide if
+it is not already present; Resolve requires this public framework to execute
+Python workflow panels. The private AI runtime remains isolated. See
+[the macOS build guide](installer/macos/README.md).
 
 ## License
 

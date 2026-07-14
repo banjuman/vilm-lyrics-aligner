@@ -17,6 +17,10 @@ icon_source="$project_root/desktop/VilmLyricsAligner.Desktop/Assets/vilm-1024.pn
 iconset="$build_root/vilm.iconset"
 dmg_stage="$build_root/dmg"
 dmg="$dist_dir/VilmLyricsAligner-1.0.0-apple-silicon.dmg"
+resolve_python_name="python-3.12.10-macos11.pkg"
+resolve_python_pkg="$build_root/$resolve_python_name"
+resolve_python_url="https://www.python.org/ftp/python/3.12.10/$resolve_python_name"
+resolve_python_sha256="8373e58da4ea146b3eb1c1f9834f19a319440b6b679b06050b1f9ee3237aa8e4"
 
 [[ "$(uname -s)" == "Darwin" ]] || { echo "Run this script on macOS." >&2; exit 1; }
 [[ "$(uname -m)" == "arm64" ]] || { echo "This build is Apple silicon only." >&2; exit 1; }
@@ -53,6 +57,21 @@ cp -R "$payload_dir" "$resources_dir/payload"
 cp "$script_dir/install-runtime.sh" "$resources_dir/install-runtime.sh"
 cp "$script_dir/install-resolve-plugin.applescript" "$resources_dir/install-resolve-plugin.applescript"
 chmod +x "$resources_dir/install-runtime.sh"
+
+echo "Preparing the Resolve Python dependency…"
+if [[ -n "${RESOLVE_PYTHON_PKG:-}" ]]; then
+  cp "$RESOLVE_PYTHON_PKG" "$resolve_python_pkg"
+else
+  /usr/bin/curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+    "$resolve_python_url" --output "$resolve_python_pkg"
+fi
+actual_resolve_python_sha256="$(/usr/bin/shasum -a 256 "$resolve_python_pkg" | /usr/bin/awk '{print $1}')"
+[[ "$actual_resolve_python_sha256" == "$resolve_python_sha256" ]] || {
+  echo "Resolve Python package checksum verification failed." >&2
+  exit 1
+}
+/usr/sbin/pkgutil --check-signature "$resolve_python_pkg" >/dev/null
+cp "$resolve_python_pkg" "$resources_dir/$resolve_python_name"
 
 echo "Creating the macOS icon…"
 for size in 16 32 128 256 512; do

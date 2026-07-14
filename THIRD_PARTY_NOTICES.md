@@ -28,3 +28,8 @@ third-party code, model weights, or trademarks.
 The application downloads unmodified runtime packages and model files from
 their upstream distribution locations during setup. No supplied lyric text,
 audio, or generated subtitle is uploaded by Vilm Lyrics Aligner.
+
+The Apple silicon DMG includes an unmodified, signed Python.org 3.12 universal2
+installer. It is installed system-wide only when the user selects Resolve Studio
+integration and that framework is absent. The uninstaller leaves this shared
+runtime in place because unrelated Resolve scripts may use it.

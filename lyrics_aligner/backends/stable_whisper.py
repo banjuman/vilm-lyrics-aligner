@@ -10,6 +10,31 @@ from ..matching import CueTranscriptMatch
 from ..models import AlignmentUnit, Cue
 
 
+def _make_mps_safe_dtw(original_dtw, dtw_cpu):
+    """Move MPS costs to CPU before Whisper requests float64 precision."""
+    if getattr(original_dtw, "_vilm_mps_safe", False):
+        return original_dtw
+
+    def dtw(costs):
+        device = getattr(costs, "device", None)
+        if getattr(device, "type", None) == "mps":
+            return dtw_cpu(costs.cpu().double().numpy())
+        return original_dtw(costs)
+
+    dtw._vilm_mps_safe = True
+    return dtw
+
+
+def _install_mps_dtw_compatibility(stable_whisper) -> None:
+    """Patch the upstream MPS ordering bug in Whisper word timestamps."""
+    import whisper.timing as whisper_timing
+
+    stable_timing = stable_whisper.timing
+    safe_dtw = _make_mps_safe_dtw(whisper_timing.dtw, whisper_timing.dtw_cpu)
+    whisper_timing.dtw = safe_dtw
+    stable_timing.dtw = safe_dtw
+
+
 class StableWhisperAligner:
     def __init__(
         self,
@@ -30,6 +55,8 @@ class StableWhisperAligner:
         self.last_local_units: dict[int, list[AlignmentUnit]] = {}
         self.last_detected_language: str | None = None
         kwargs = {"device": self.device}
+        if self.device == "mps":
+            _install_mps_dtw_compatibility(stable_whisper)
         if download_root is not None:
             kwargs["download_root"] = str(Path(download_root))
         self._model = stable_whisper.load_model(model_name, **kwargs)

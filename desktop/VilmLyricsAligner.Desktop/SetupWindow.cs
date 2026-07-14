@@ -17,15 +17,16 @@ internal sealed class SetupWindow : Window
     private readonly CheckBox _resolveOption;
     private readonly Button _installButton;
     private readonly CancellationTokenSource _cancellation = new();
+    private bool _installationComplete;
 
     public SetupWindow(Action onInstalled, string? startupError = null)
     {
         _onInstalled = onInstalled;
         Title = "Vilm Lyrics Aligner Setup";
-        Width = 560;
-        Height = 540;
-        MinWidth = 520;
-        MinHeight = 500;
+        Width = 620;
+        Height = 640;
+        MinWidth = 560;
+        MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = Brush.Parse("#F2E9D2");
         FontFamily = new FontFamily("Segoe UI, Helvetica Neue, Apple SD Gothic Neo");
@@ -51,10 +52,14 @@ internal sealed class SetupWindow : Window
             IsReadOnly = true,
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
-            MinHeight = 150,
+            Height = 220,
             FontFamily = new FontFamily("Menlo, Consolas, monospace"),
             FontSize = 11,
         };
+        ScrollViewer.SetVerticalScrollBarVisibility(
+            _log, Avalonia.Controls.Primitives.ScrollBarVisibility.Auto);
+        ScrollViewer.SetHorizontalScrollBarVisibility(
+            _log, Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled);
         _resolveOption = new CheckBox
         {
             Content = resolveDetected
@@ -71,7 +76,16 @@ internal sealed class SetupWindow : Window
             Padding = new Thickness(16, 7),
             FontWeight = FontWeight.Bold,
         };
-        _installButton.Click += async (_, _) => await InstallAsync();
+        _installButton.Click += async (_, _) =>
+        {
+            if (_installationComplete)
+            {
+                _onInstalled();
+                Close();
+                return;
+            }
+            await InstallAsync();
+        };
         Closed += (_, _) => _cancellation.Cancel();
 
         var header = new StackPanel
@@ -108,9 +122,15 @@ internal sealed class SetupWindow : Window
                 {
                     new TextBlock
                     {
-                        Text = "The app installs its own Python, PyTorch, and AI models. It does not modify system Python or other projects.",
+                        Text = "The app installs its own private Python, PyTorch, and AI models without changing other projects.",
                         TextWrapping = TextWrapping.Wrap,
                         FontWeight = FontWeight.SemiBold,
+                    },
+                    new TextBlock
+                    {
+                        Text = "Resolve integration also installs the official Python.org 3.12 runtime system-wide when that runtime is not already present.",
+                        TextWrapping = TextWrapping.Wrap,
+                        Foreground = Brush.Parse("#7A6B55"),
                     },
                     new TextBlock
                     {
@@ -143,7 +163,9 @@ internal sealed class SetupWindow : Window
         || Directory.Exists("/Applications/DaVinci Resolve.app");
     private async Task InstallAsync()
     {
+        bool installResolve = _resolveOption.IsChecked == true;
         _installButton.IsEnabled = false;
+        _installButton.Content = "Installing…";
         _resolveOption.IsEnabled = false;
         _log.Text = "";
         try
@@ -170,7 +192,7 @@ internal sealed class SetupWindow : Window
             start.ArgumentList.Add(script);
             start.ArgumentList.Add(payload);
             start.ArgumentList.Add(AppPaths.Root);
-            start.ArgumentList.Add(_resolveOption.IsChecked == true ? "1" : "0");
+            start.ArgumentList.Add(installResolve ? "1" : "0");
             start.ArgumentList.Add(resources);
 
             using var process = new Process { StartInfo = start };
@@ -191,19 +213,26 @@ internal sealed class SetupWindow : Window
             }
 
             _ = EngineRuntime.Load();
-            _status.Text = "Installation complete.";
+            _installationComplete = true;
+            _status.Text = installResolve
+                ? "Installation complete. Restart DaVinci Resolve before opening the Vilm panel."
+                : "Installation complete. Vilm Lyrics Aligner is ready.";
             _progress.Value = 100;
-            _onInstalled();
-            Close();
+            _installButton.Content = "Open Vilm Lyrics Aligner";
+            _installButton.IsEnabled = true;
         }
         catch (OperationCanceledException)
         {
             _status.Text = "Setup cancelled.";
+            _installButton.Content = "Try again";
+            _installButton.IsEnabled = true;
+            _resolveOption.IsEnabled = IsResolveInstalled();
         }
         catch (Exception exception)
         {
             AppendLog(exception.Message, true);
             _status.Text = "Setup failed. Review the details and try again.";
+            _installButton.Content = "Try again";
             _installButton.IsEnabled = true;
             _resolveOption.IsEnabled = IsResolveInstalled();
         }

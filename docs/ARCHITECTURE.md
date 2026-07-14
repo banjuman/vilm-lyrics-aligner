@@ -71,5 +71,10 @@ backends are not shown.
   set global `PYTHONHOME` or prepend Python to `PATH`.
 - The macOS Resolve panel is installed to Blackmagic Design's system Workflow
   Integration Plugins folder after an explicit administrator prompt.
+- Resolve does not execute the app's private AI Python. When the macOS Resolve
+  integration is selected, setup installs a pinned, checksum-verified official
+  Python.org 3.12 universal2 framework system-wide if it is absent, then installs
+  the panel in the same administrator-approved operation. Removal leaves this
+  shared framework in place for other Resolve scripts.
 - Temporary media, WAV and stems are deleted on completion or failure; stale
   app-owned work directories older than 24 hours are removed on the next launch.

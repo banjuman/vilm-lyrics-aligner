@@ -95,6 +95,13 @@ class AvaloniaDesktopSourceTests(unittest.TestCase):
         self.assertIn("StandardOutputEncoding = Encoding.UTF8", setup)
         self.assertIn("StandardErrorEncoding = Encoding.UTF8", setup)
 
+    def test_macos_setup_waits_for_explicit_open_after_all_components_finish(self):
+        source = (DESKTOP / "SetupWindow.cs").read_text(encoding="utf-8")
+        self.assertIn("private bool _installationComplete;", source)
+        self.assertIn("_installationComplete = true;", source)
+        self.assertIn('Content = "Open Vilm Lyrics Aligner"', source)
+        self.assertIn("Restart DaVinci Resolve before opening the Vilm panel.", source)
+
 
 if __name__ == "__main__":
     unittest.main()

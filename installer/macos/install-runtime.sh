@@ -3,6 +3,8 @@ set -euo pipefail
 
 UV_VERSION="0.11.28"
 TORCH_VERSION="2.11.0"
+RESOLVE_PYTHON_NAME="python-3.12.10-macos11.pkg"
+RESOLVE_PYTHON_SHA256="8373e58da4ea146b3eb1c1f9834f19a319440b6b679b06050b1f9ee3237aa8e4"
 
 payload_dir="${1:?payload directory is required}"
 app_root="${2:?application data directory is required}"
@@ -90,7 +92,7 @@ progress 56 "Installing Vilm Lyrics Aligner components…"
 
 progress 72 "Downloading AI models and checking Apple Metal…"
 if "$python_exe" -m lyrics_aligner.runtime_setup; then
-  backend="$($python_exe -c 'import torch; print("mps" if torch.backends.mps.is_available() else "cpu")')"
+  backend="$("$python_exe" -c 'import torch; print("mps" if torch.backends.mps.is_available() else "cpu")')"
 else
   printf 'Apple Metal validation failed; retrying with the CPU compatibility path.\n' >&2
   LYRICS_ALIGNER_DEVICE=cpu "$python_exe" -m lyrics_aligner.runtime_setup
@@ -115,11 +117,39 @@ Path(path).write_text(
 PY
 
 if [[ "$install_resolve" == "1" ]]; then
-  progress 94 "Installing DaVinci Resolve Studio integration…"
   helper="$resources_dir/install-resolve-plugin.applescript"
   plugin="$app_dir/resolve/LyricsAligner.py"
-  [[ -f "$helper" && -f "$plugin" ]] || fail "Resolve integration files are missing."
-  /usr/bin/osascript "$helper" "$plugin"
+  resolve_python_pkg="$resources_dir/$RESOLVE_PYTHON_NAME"
+  resolve_python_framework="/Library/Frameworks/Python.framework/Versions/3.12/Python"
+  resolve_python_exe="/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12"
+  resolve_plugin="/Library/Application Support/Blackmagic Design/DaVinci Resolve/Workflow Integration Plugins/Vilm Lyrics Aligner.py"
+  [[ -f "$helper" && -f "$plugin" && -f "$resolve_python_pkg" ]] \
+    || fail "Resolve integration files are missing."
+  actual_resolve_python_sha256="$(/usr/bin/shasum -a 256 "$resolve_python_pkg" | /usr/bin/awk '{print $1}')"
+  [[ "$actual_resolve_python_sha256" == "$RESOLVE_PYTHON_SHA256" ]] \
+    || fail "Resolve Python package verification failed."
+  /usr/sbin/pkgutil --check-signature "$resolve_python_pkg" >/dev/null \
+    || fail "Resolve Python package signature verification failed."
+  if [[ -f "$resolve_python_framework" ]]; then
+    progress 94 "Installing the Resolve panel; official Python.org 3.12 is already ready…"
+  else
+    progress 92 "Installing official Python.org 3.12 and the Resolve panel…"
+  fi
+  /usr/bin/osascript "$helper" "$plugin" "$resolve_python_pkg"
+  progress 98 "Verifying DaVinci Resolve Studio integration…"
+  [[ -f "$resolve_python_framework" && -x "$resolve_python_exe" ]] \
+    || fail "Resolve Python 3.12 did not finish installing."
+  /usr/bin/file "$resolve_python_framework" | /usr/bin/grep -q "arm64" \
+    || fail "Resolve Python does not include Apple silicon support."
+  "$resolve_python_exe" -c 'import sys; raise SystemExit(sys.version_info[:2] != (3, 12))' \
+    || fail "Resolve Python 3.12 could not start."
+  [[ -f "$resolve_plugin" ]] || fail "The Resolve panel was not installed."
+  /usr/bin/cmp -s "$plugin" "$resolve_plugin" \
+    || fail "The installed Resolve panel did not pass verification."
 fi
 
-progress 100 "Installation complete."
+if [[ "$install_resolve" == "1" ]]; then
+  progress 100 "Setup complete. Restart Resolve before opening the Vilm panel."
+else
+  progress 100 "Setup complete. Vilm Lyrics Aligner is ready."
+fi
