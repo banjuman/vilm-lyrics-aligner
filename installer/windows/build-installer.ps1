@@ -28,6 +28,8 @@ foreach ($Target in @($Stage, $DesktopPublish, $Assets, $Output)) {
     }
 }
 
+New-Item -ItemType Directory -Force -Path $Assets, $Output | Out-Null
+
 if (-not (Test-Path -LiteralPath $ResolvePythonInstaller -PathType Leaf)) {
     $DownloadPath = "$ResolvePythonInstaller.download"
     Remove-Item -LiteralPath $DownloadPath -Force -ErrorAction SilentlyContinue
