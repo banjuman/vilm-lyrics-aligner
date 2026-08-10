@@ -1,6 +1,6 @@
 param(
     [string]$InstallRoot = "C:\tmp\LyricsAligner-Isolated-CPU",
-    [ValidateSet("cpu", "cu126")]
+    [ValidateSet("cpu", "cu128")]
     [string]$Backend = "cpu"
 )
 

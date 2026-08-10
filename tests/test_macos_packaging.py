@@ -12,7 +12,7 @@ class MacOSPackagingTests(unittest.TestCase):
         self.assertIn('"$(uname -m)" == "arm64"', source)
         self.assertIn("-r osx-arm64", source)
         self.assertIn("--self-contained true", source)
-        self.assertIn("VilmLyricsAligner-1.0.0-apple-silicon.dmg", source)
+        self.assertIn("VilmLyricsAligner-1.0.1-apple-silicon.dmg", source)
 
     def test_runtime_is_private_and_mps_capable(self):
         source = (MACOS / "install-runtime.sh").read_text(encoding="utf-8")

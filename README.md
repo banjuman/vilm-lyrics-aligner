@@ -4,7 +4,7 @@ Vilm Lyrics Aligner creates editorially timed SRT subtitles from original lyrics
 
 > The lyrics you provide are always the subtitle text source. Audio recognition is used for timing evidence only; it never silently rewrites your words.
 
-[Website & downloads](https://voiceandfilm.com) · [Latest source release](https://github.com/banjuman/vilm-lyrics-aligner/releases/latest) · [English guide](docs/USER_GUIDE.en.md) · [한국어 가이드](docs/USER_GUIDE.ko.md)
+[Website & downloads](https://voiceandfilm.com) · [Latest source release](https://github.com/banjuman/vilm-lyrics-aligner/releases/latest) · [Changelog](CHANGELOG.md) · [English guide](docs/USER_GUIDE.en.md) · [한국어 가이드](docs/USER_GUIDE.ko.md)
 
 ## What it does
 

@@ -48,7 +48,7 @@ def register_windows_uninstaller() -> bool:
                 f'"{uninstall_script}"'
             )
             winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, "Vilm Lyrics Aligner")
-            winreg.SetValueEx(key, "DisplayVersion", 0, winreg.REG_SZ, "1.0.0")
+            winreg.SetValueEx(key, "DisplayVersion", 0, winreg.REG_SZ, "1.0.1")
             winreg.SetValueEx(key, "Publisher", 0, winreg.REG_SZ, "Vilm")
             winreg.SetValueEx(key, "InstallLocation", 0, winreg.REG_SZ, str(runtime_root))
             winreg.SetValueEx(key, "UninstallString", 0, winreg.REG_SZ, command)
@@ -105,7 +105,8 @@ if (Test-Path -LiteralPath $AppRoot) {{
 Remove-Item -LiteralPath 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LyricsAligner' -Recurse -Force -ErrorAction SilentlyContinue
 
 $Cleanup = "Start-Sleep -Seconds 2; Remove-Item -LiteralPath '$UninstallRoot' -Recurse -Force"
+$CleanupEncoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Cleanup))
 Start-Process powershell.exe -WindowStyle Hidden -ArgumentList @(
-    '-NoProfile', '-WindowStyle', 'Hidden', '-Command', $Cleanup
+    '-NoProfile', '-WindowStyle', 'Hidden', '-EncodedCommand', $CleanupEncoded
 )
 """

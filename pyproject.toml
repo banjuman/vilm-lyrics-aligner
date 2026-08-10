@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lyrics-aligner"
-version = "1.0.0"
+version = "1.0.1"
 description = "Generate song subtitles by aligning known lyrics to a DaVinci Resolve timeline."
 requires-python = ">=3.10"
 dependencies = ["av>=14", "soundfile>=0.12"]

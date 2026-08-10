@@ -9,13 +9,14 @@
 2. DaVinci Resolve Studio 설치 여부 확인 및 선택 연동 제공
 3. NVIDIA 드라이버와 CUDA PyTorch 사용 가능성 감지
 4. `%LOCALAPPDATA%\LyricsAligner`에 전용 Python 3.11과 가상환경 설치
-5. 검증된 NVIDIA 환경은 CUDA 12.6 PyTorch, 나머지는 CPU 전용 PyTorch 설치
-6. 고정된 앱 의존성과 Vilm Lyrics Aligner `1.0.0` 설치
+5. 검증된 NVIDIA 환경은 CUDA 12.8 PyTorch, 나머지는 CPU 전용 PyTorch 설치
+6. 고정된 앱 의존성과 Vilm Lyrics Aligner `1.0.1` 설치
 7. Whisper `small`, Demucs `htdemucs`, Silero VAD 다운로드와 자체 진단
 8. Resolve 연동을 선택한 경우 등록된 Python.org 3.12를 확인하고, 없으면 서명과 SHA-256을 검증한 동봉 공식 패키지 설치
 9. 선택한 경우 `%PROGRAMDATA%`의 Resolve Workflow Integration 폴더에 패널 설치
 10. 사용자 설정·시작 메뉴 바로가기·Windows 앱 제거 항목 등록
-11. 설치용 uv 캐시 삭제
+11. 네트워크 단계가 중단되면 5초·10초·20초 간격으로 최대 4회 재시도
+12. 실패한 설치의 검증된 다운로드 캐시는 다음 실행에서 재사용하고, 성공 시 삭제
 
 앱의 AI Python은 전용으로 유지하며 시스템 `PATH`와 `PYTHONHOME`을 변경하지 않는다.
 단, Resolve 연동을 선택했고 호환 Python이 없을 때는 Resolve가 발견할 수 있는
@@ -44,11 +45,16 @@ uv는 버전과 Windows x64 ZIP의 SHA-256을 고정하며, 설치기는 압축�
 - CUDA 가능한 개발 PC의 장치 선택과 전체 파이프라인 확인
 - 설치 경로 기반 모델 캐시 격리와 제거 스크립트 단위 테스트 확인
 - uv 버전/해시 고정, C# 컴파일과 검사 순서 테스트 확인
+- 방화벽 승인 지연을 고려한 네트워크 재시도와 실패 후 캐시 보존 검사 확인
 
-아직 남은 배포 차단 항목:
+검증 완료:
 
-- 깨끗한 Windows CPU/NVIDIA 환경의 GUI 설치→Resolve 실행→제거 E2E
-- 네트워크 실패·취소·재설치 복구 검증
+- 깨끗한 Windows 11 AMD 환경의 CPU fallback GUI 설치→앱/Resolve 연동→제거 E2E
+- 첫 네트워크 프로세스를 강제로 중단한 뒤 자동 재시도로 설치가 완료되는 E2E
+- 제거 후 앱·모델·Resolve 패널·바로가기·레지스트리·설치 폴더 정리 확인
+
+추가 현장 확인 항목:
+
+- RTX 50 시리즈에서 CUDA 12.8 런타임 설치와 실제 자막 생성 확인
+- 승인 팝업을 띄우는 제한형 타사 방화벽 환경에서의 사용자 경험 확인
 - 배포용 코드 서명
-
-이 항목들을 통과하기 전에는 외부 사용자용 정식 설치판으로 취급하지 않는다.

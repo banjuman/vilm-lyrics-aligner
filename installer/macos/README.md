@@ -20,7 +20,7 @@ panel requires DaVinci Resolve Studio.
    ./installer/macos/build-macos.sh
    ```
 
-4. Open `installer/macos/dist/VilmLyricsAligner-1.0.0-apple-silicon.dmg`, drag
+4. Open `installer/macos/dist/VilmLyricsAligner-1.0.1-apple-silicon.dmg`, drag
    the app to Applications, and open it. An unsigned development build may need
    **Control-click → Open** the first time.
 5. Select **Install** in the first-run window. This creates an isolated runtime

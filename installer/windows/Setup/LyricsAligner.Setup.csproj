@@ -14,8 +14,8 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <AssemblyName>VilmLyricsAlignerSetup</AssemblyName>
-    <Version>1.0.0</Version>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.1</Version>
+    <FileVersion>1.0.1.0</FileVersion>
     <Product>Vilm Lyrics Aligner</Product>
     <Company>Vilm</Company>
     <ApplicationManifest>app.manifest</ApplicationManifest>

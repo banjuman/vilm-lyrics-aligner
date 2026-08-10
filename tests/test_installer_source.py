@@ -12,6 +12,16 @@ class WindowsInstallerSourceTests(unittest.TestCase):
         self.assertIn('string installedBackend = cudaReady ? "cuda" : "cpu";', source)
         self.assertIn('["backend"] = installedBackend', source)
 
+    def test_installer_uses_blackwell_runtime_and_executes_a_cuda_kernel(self):
+        source = PROGRAM_SOURCE.read_text(encoding="utf-8")
+        self.assertIn("https://download.pytorch.org/whl/cu128", source)
+        self.assertNotIn("https://download.pytorch.org/whl/cu126", source)
+        self.assertIn("torch.ones(1, device=device) * 2", source)
+        self.assertIn("torch.cuda.synchronize(device)", source)
+        self.assertIn("torch.cuda.get_device_capability(0)", source)
+        self.assertIn("CUDA tensor validation failed", source)
+        self.assertIn("CpuTorchIndex", source)
+
     def test_installer_registers_vilm_panel_and_removes_legacy_entry(self):
         source = PROGRAM_SOURCE.read_text(encoding="utf-8")
         self.assertIn('Path.Combine(pluginDir, "Vilm Lyrics Aligner.py")', source)
@@ -35,9 +45,33 @@ class WindowsInstallerSourceTests(unittest.TestCase):
 
     def test_reinstall_replaces_only_the_private_runtime(self):
         source = PROGRAM_SOURCE.read_text(encoding="utf-8")
-        self.assertIn("ResetPrivateRuntime(appRoot", source)
+        self.assertIn(
+            "ResetPrivateRuntime(appRoot, appDir, toolsDir, pythonDir, venvDir);",
+            source,
+        )
+        self.assertNotIn(
+            "ResetPrivateRuntime(appRoot, appDir, toolsDir, pythonDir, venvDir, cacheDir)",
+            source,
+        )
         self.assertIn("Refusing to replace an unsafe runtime path", source)
         self.assertNotIn('Path.Combine(appRoot, "models")', source)
+
+    def test_network_steps_retry_and_reuse_verified_downloads(self):
+        source = PROGRAM_SOURCE.read_text(encoding="utf-8")
+
+        self.assertIn("NetworkRetryDelays", source)
+        self.assertIn("TimeSpan.FromSeconds(5)", source)
+        self.assertIn("TimeSpan.FromSeconds(10)", source)
+        self.assertIn("TimeSpan.FromSeconds(20)", source)
+        self.assertIn('"Private Python download"', source)
+        self.assertIn('"PyTorch runtime download"', source)
+        self.assertIn('"Python dependency download"', source)
+        self.assertIn('"AI model download"', source)
+        self.assertIn("RunNetworkStepWithRetryAsync", source)
+        self.assertIn("Using the verified uv download from the previous setup attempt", source)
+        self.assertIn("File.Move(partialPath, zipPath, true)", source)
+        self.assertIn("cached files will be reused", source)
+        self.assertIn("process.Kill(entireProcessTree: true)", source)
 
     def test_uv_download_is_version_and_hash_pinned(self):
         source = PROGRAM_SOURCE.read_text(encoding="utf-8")

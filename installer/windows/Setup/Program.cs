@@ -38,6 +38,14 @@ internal sealed class InstallerForm : Form
     private const string ResolvePythonResource = "LyricsAligner.python-3.12.10-amd64.exe";
     private const string ResolvePythonSha256 =
         "67B5635E80EA51072B87941312D00EC8927C4DB9BA18938F7AD2D27B328B95FB";
+    private const string CpuTorchIndex = "https://download.pytorch.org/whl/cpu";
+    private const string CudaTorchIndex = "https://download.pytorch.org/whl/cu128";
+    private static readonly TimeSpan[] NetworkRetryDelays =
+    [
+        TimeSpan.FromSeconds(5),
+        TimeSpan.FromSeconds(10),
+        TimeSpan.FromSeconds(20),
+    ];
     private readonly Label _status = new() { AutoSize = false, Dock = DockStyle.Top, Height = 48 };
     private readonly ProgressBar _progress = new() { Dock = DockStyle.Top, Height = 22, Minimum = 0, Maximum = 100 };
     private readonly TextBox _log = new()
@@ -113,7 +121,7 @@ internal sealed class InstallerForm : Form
             string venvDir = Path.Combine(appRoot, "venv");
             string cacheDir = Path.Combine(appRoot, "install-cache");
             Directory.CreateDirectory(appRoot);
-            ResetPrivateRuntime(appRoot, appDir, toolsDir, pythonDir, venvDir, cacheDir);
+            ResetPrivateRuntime(appRoot, appDir, toolsDir, pythonDir, venvDir);
             Directory.CreateDirectory(toolsDir);
             Directory.CreateDirectory(cacheDir);
 
@@ -124,7 +132,7 @@ internal sealed class InstallerForm : Form
             string uvPath = Path.Combine(toolsDir, "uv.exe");
             if (!File.Exists(uvPath))
             {
-                await DownloadUvAsync(uvPath, cancellationToken);
+                await DownloadUvAsync(uvPath, cacheDir, cancellationToken);
             }
 
             var environment = new Dictionary<string, string?>
@@ -135,7 +143,8 @@ internal sealed class InstallerForm : Form
             };
 
             SetStage(22, "Preparing private Python 3.11…");
-            await RunAsync(
+            await RunNetworkStepWithRetryAsync(
+                "Private Python download",
                 uvPath,
                 ["python", "install", "3.11", "--install-dir", pythonDir, "--no-bin"],
                 appRoot,
@@ -153,8 +162,8 @@ internal sealed class InstallerForm : Form
 
             bool hasNvidia = await DetectNvidiaAsync(cancellationToken);
             string torchIndex = hasNvidia
-                ? "https://download.pytorch.org/whl/cu126"
-                : "https://download.pytorch.org/whl/cpu";
+                ? CudaTorchIndex
+                : CpuTorchIndex;
             SetStage(40, hasNvidia
                 ? "Installing the NVIDIA GPU AI runtime…"
                 : "Installing the CPU AI runtime…");
@@ -169,7 +178,7 @@ internal sealed class InstallerForm : Form
                 await InstallTorchAsync(
                     uvPath,
                     pythonExe,
-                    "https://download.pytorch.org/whl/cpu",
+                    CpuTorchIndex,
                     appRoot,
                     environment,
                     cancellationToken,
@@ -178,7 +187,8 @@ internal sealed class InstallerForm : Form
             string installedBackend = cudaReady ? "cuda" : "cpu";
 
             SetStage(58, "Installing Vilm Lyrics Aligner components…");
-            await RunAsync(
+            await RunNetworkStepWithRetryAsync(
+                "Python dependency download",
                 uvPath,
                 ["pip", "install", "--python", pythonExe, "-r", Path.Combine(appDir, "requirements-app.txt")],
                 appRoot,
@@ -192,7 +202,8 @@ internal sealed class InstallerForm : Form
                 cancellationToken);
 
             SetStage(74, "Downloading AI models and validating the runtime…");
-            await RunAsync(
+            await RunNetworkStepWithRetryAsync(
+                "AI model download",
                 pythonExe,
                 ["-m", "lyrics_aligner.runtime_setup"],
                 appDir,
@@ -421,37 +432,90 @@ internal sealed class InstallerForm : Form
         archive.ExtractToDirectory(appDir, true);
     }
 
-    private async Task DownloadUvAsync(string uvPath, CancellationToken cancellationToken)
+    private async Task DownloadUvAsync(
+        string uvPath, string cacheDir, CancellationToken cancellationToken)
     {
         string url = $"https://github.com/astral-sh/uv/releases/download/{UvVersion}/uv-x86_64-pc-windows-msvc.zip";
-        string zipPath = Path.Combine(Path.GetDirectoryName(uvPath)!, "uv.zip");
-        using var client = new HttpClient();
-        Log($"Download: {url}");
-        await using (Stream source = await client.GetStreamAsync(url, cancellationToken))
-        await using (FileStream destination = File.Create(zipPath))
-        {
-            await source.CopyToAsync(destination, cancellationToken);
-        }
+        string zipPath = Path.Combine(cacheDir, $"uv-{UvVersion}.zip");
+        string partialPath = zipPath + ".download";
+        Directory.CreateDirectory(cacheDir);
 
-        string actualHash;
-        await using (FileStream downloadedZip = File.OpenRead(zipPath))
+        if (!await HasExpectedSha256Async(zipPath, UvZipSha256, cancellationToken))
         {
-            actualHash = Convert.ToHexString(
-                await SHA256.HashDataAsync(downloadedZip, cancellationToken));
+            TryDeleteFile(zipPath);
+            using var client = new HttpClient();
+            Exception? lastException = null;
+            int totalAttempts = NetworkRetryDelays.Length + 1;
+            for (int attempt = 1; attempt <= totalAttempts; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                TryDeleteFile(partialPath);
+                try
+                {
+                    Log($"Download: {url} (attempt {attempt}/{totalAttempts})");
+                    using HttpResponseMessage response = await client.GetAsync(
+                        url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                    await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    await using (FileStream destination = File.Create(partialPath))
+                    {
+                        await source.CopyToAsync(destination, cancellationToken);
+                    }
+                    if (!await HasExpectedSha256Async(
+                        partialPath, UvZipSha256, cancellationToken))
+                    {
+                        throw new InvalidOperationException("uv download integrity check failed.");
+                    }
+                    File.Move(partialPath, zipPath, true);
+                    lastException = null;
+                    break;
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    TryDeleteFile(partialPath);
+                    throw;
+                }
+                catch (Exception exception) when (exception is HttpRequestException
+                    or IOException or TaskCanceledException or InvalidOperationException)
+                {
+                    TryDeleteFile(partialPath);
+                    lastException = exception;
+                    if (attempt < totalAttempts)
+                    {
+                        TimeSpan delay = NetworkRetryDelays[attempt - 1];
+                        LogNetworkRetry("uv download", attempt, totalAttempts, delay);
+                        await Task.Delay(delay, cancellationToken);
+                    }
+                }
+            }
+            if (lastException is not null)
+            {
+                throw new InvalidOperationException(
+                    $"uv download failed after {totalAttempts} attempts. " +
+                    "Allow the setup app through the firewall, then run setup again; cached files will be reused.",
+                    lastException);
+            }
         }
-        if (!string.Equals(actualHash, UvZipSha256, StringComparison.OrdinalIgnoreCase))
+        else
         {
-            File.Delete(zipPath);
-            throw new InvalidOperationException(
-                $"uv download integrity check failed. expected={UvZipSha256}, actual={actualHash}");
+            Log("Using the verified uv download from the previous setup attempt.");
         }
 
         ZipFile.ExtractToDirectory(zipPath, Path.GetDirectoryName(uvPath)!, true);
-        File.Delete(zipPath);
         if (!File.Exists(uvPath))
         {
             throw new InvalidOperationException("The uv archive did not contain uv.exe.");
         }
+    }
+
+    private static async Task<bool> HasExpectedSha256Async(
+        string path, string expectedHash, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(path)) return false;
+        await using FileStream file = File.OpenRead(path);
+        string actualHash = Convert.ToHexString(
+            await SHA256.HashDataAsync(file, cancellationToken));
+        return string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> DetectNvidiaAsync(CancellationToken cancellationToken)
@@ -495,20 +559,103 @@ internal sealed class InstallerForm : Form
         {
             arguments.Add("--reinstall");
         }
-        await RunAsync(uvPath, arguments, workingDirectory, environment, cancellationToken);
+        await RunNetworkStepWithRetryAsync(
+            "PyTorch runtime download",
+            uvPath,
+            arguments,
+            workingDirectory,
+            environment,
+            cancellationToken);
     }
 
     private async Task<bool> VerifyCudaAsync(
         string pythonExe, string workingDirectory, CancellationToken cancellationToken)
     {
+        Log("Validating CUDA with an actual tensor operation...");
+        const string probe =
+            "import json, torch; " +
+            "assert torch.cuda.is_available(), 'torch.cuda.is_available() is false'; " +
+            "device = torch.device('cuda:0'); " +
+            "value = (torch.ones(1, device=device) * 2); " +
+            "torch.cuda.synchronize(device); " +
+            "assert float(value.cpu().item()) == 2.0, 'CUDA tensor probe returned an invalid result'; " +
+            "print(json.dumps({'device': torch.cuda.get_device_name(0), " +
+            "'capability': torch.cuda.get_device_capability(0), " +
+            "'torch_cuda': torch.version.cuda, 'architectures': torch.cuda.get_arch_list()}))";
         ProcessResult result = await RunAsync(
             pythonExe,
-            ["-c", "import torch; print(torch.cuda.is_available())"],
+            ["-c", probe],
             workingDirectory,
             null,
             cancellationToken,
             throwOnFailure: false);
-        return result.ExitCode == 0 && result.StdOut.Contains("True", StringComparison.OrdinalIgnoreCase);
+        bool ready = result.ExitCode == 0;
+        Log(ready
+            ? "CUDA tensor validation succeeded."
+            : "CUDA tensor validation failed; this GPU or driver cannot execute the installed runtime.");
+        return ready;
+    }
+
+    private async Task<ProcessResult> RunNetworkStepWithRetryAsync(
+        string operation,
+        string executable,
+        IReadOnlyCollection<string> arguments,
+        string workingDirectory,
+        IReadOnlyDictionary<string, string?>? environment,
+        CancellationToken cancellationToken)
+    {
+        int totalAttempts = NetworkRetryDelays.Length + 1;
+        ProcessResult? lastResult = null;
+        Exception? lastException = null;
+        for (int attempt = 1; attempt <= totalAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                lastResult = await RunAsync(
+                    executable,
+                    arguments,
+                    workingDirectory,
+                    environment,
+                    cancellationToken,
+                    throwOnFailure: false);
+                lastException = null;
+                if (lastResult.ExitCode == 0) return lastResult;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                lastResult = null;
+                lastException = exception;
+            }
+
+            if (attempt < totalAttempts)
+            {
+                TimeSpan delay = NetworkRetryDelays[attempt - 1];
+                LogNetworkRetry(operation, attempt, totalAttempts, delay);
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
+
+        string detail = lastResult is null
+            ? lastException?.Message ?? "unknown error"
+            : $"exit code {lastResult.ExitCode}";
+        throw new InvalidOperationException(
+            $"{operation} failed after {totalAttempts} attempts ({detail}). " +
+            "Allow setup, uv, and Python through the firewall, then run setup again; cached files will be reused.",
+            lastException);
+    }
+
+    private void LogNetworkRetry(
+        string operation, int attempt, int totalAttempts, TimeSpan delay)
+    {
+        Log(
+            $"{operation} did not complete (attempt {attempt}/{totalAttempts}). " +
+            $"Retrying in {delay.TotalSeconds:0} seconds. " +
+            "If a firewall approval is open, allow it now.");
     }
 
     private async Task<ProcessResult> RunAsync(
@@ -543,9 +690,22 @@ internal sealed class InstallerForm : Form
         Log($"> {Path.GetFileName(executable)} {string.Join(' ', arguments)}");
         using var process = new Process { StartInfo = start };
         process.Start();
-        Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        Task<string> stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
+        Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderrTask = process.StandardError.ReadToEndAsync();
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                if (!process.HasExited) process.Kill(entireProcessTree: true);
+                await process.WaitForExitAsync(CancellationToken.None);
+            }
+            catch (Exception) when (cancellationToken.IsCancellationRequested) { }
+            throw;
+        }
         string stdout = await stdoutTask;
         string stderr = await stderrTask;
         if (!string.IsNullOrWhiteSpace(stdout)) Log(stdout.Trim());
@@ -577,6 +737,18 @@ internal sealed class InstallerForm : Form
             return;
         }
         _log.AppendText(message + Environment.NewLine);
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch
+        {
+            // A later retry or setup run will replace disposable partial files.
+        }
     }
 
     private static void TryDeleteDirectory(string path)
