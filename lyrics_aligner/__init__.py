@@ -9,7 +9,7 @@ from .platform_paths import managed_runtime_root
 from .windows_install import register_windows_uninstaller
 
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 def _configure_managed_install() -> None:

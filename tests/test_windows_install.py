@@ -17,6 +17,9 @@ class WindowsUninstallTests(unittest.TestCase):
         self.assertIn("GetFileName($AppRoot) -ne 'LyricsAligner'", script)
         self.assertIn("Remove-Item -LiteralPath $AppRoot -Recurse", script)
         self.assertIn("Vilm Lyrics Aligner.py", script)
+        self.assertIn("[Text.Encoding]::Unicode.GetBytes($Cleanup)", script)
+        self.assertIn("'-EncodedCommand', $CleanupEncoded", script)
+        self.assertNotIn("'-Command', $Cleanup", script)
 
 
 if __name__ == "__main__":
